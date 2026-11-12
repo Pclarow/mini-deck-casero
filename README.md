@@ -5,7 +5,7 @@
 Entrega 1 · Unidad 2: Interfaces físicas · Diseño de Interfaces · UAI
 Autor: Pedro Claro · Octubre 2026
 
-![Mini Deck terminado](fotos/01_producto_final.jpg)
+![Mini Deck terminado](01_producto_final.jpg)
 
 ## Video
 
@@ -27,7 +27,7 @@ Autor: Pedro Claro · Octubre 2026
 
 Toda la electrónica está soldada en una placa perforada de 5 × 7 cm (sin protoboard). Del shield salen 7 cables etiquetados que se enchufan en el Arduino Uno, por lo que el Arduino se desmonta sin desoldar.
 
-![Mapa del shield](docs/esquemas/shield_mapa.png)
+![Mapa del shield](shield_mapa.png)
 
 | Fila de la placa | Señal | Cable al Arduino | Componentes |
 |---|---|---|---|
@@ -50,7 +50,7 @@ Los botones usan `INPUT_PULLUP` (resistencia interna del Arduino), así que el c
 
 ## Software
 
-### Arduino (`arduino/mini_deck/mini_deck.ino`)
+### Arduino (`mini_deck.ino`)
 
 Envía por USB serial a **115200 baud** una línea por lectura:
 
@@ -78,26 +78,29 @@ Sin Arduino también se puede probar: teclas `Q` (CUE), `W` (PLAY) y `E` (FX), y
 
 | | |
 |---|---|
-| ![Componentes](fotos/02_componentes.jpg) **1. Componentes** | ![Modelo 3D](fotos/03_modelo_3d_rhino.jpg) **2. Modelo 3D en Rhino** |
-| ![Prueba](fotos/04_prueba_monitor_serie.jpg) **3. Prueba de cada control en el Monitor Serie** | ![Shield](fotos/05_soldadura_shield.jpg) **4. Soldadura del shield** |
-| ![Cableado](fotos/06_cableado_perilla.jpg) **5. Cableado de los controles** | ![Final](fotos/01_producto_final.jpg) **6. Producto final** |
+| ![Componentes](02_componentes.jpg) **1. Componentes** | ![Modelo 3D](03_modelo_3d_rhino.jpg) **2. Modelo 3D en Rhino** |
+| ![Prueba](04_prueba_monitor_serie.jpg) **3. Prueba de cada control en el Monitor Serie** | ![Shield](05_soldadura_shield.jpg) **4. Soldadura del shield** |
+| ![Cableado](06_cableado_perilla.jpg) **5. Cableado de los controles** | ![Final](01_producto_final.jpg) **6. Producto final** |
 
 ## Láminas
 
-- [Lámina de producto (PDF)](docs/laminas/Mini_Deck_Lamina.pdf)
-- [Informe de producto, 4 páginas (PDF)](docs/laminas/Mini_Deck_Informe.pdf)
+- [Lámina de producto (PDF)](Mini_Deck_Lamina.pdf)
+- [Informe de producto, 4 páginas (PDF)](Mini_Deck_Informe.pdf)
 
-![Lámina de producto](docs/laminas/Mini_Deck_Lamina.jpg)
+![Lámina de producto](Mini_Deck_Lamina.jpg)
 
 ## Estructura del repositorio
 
 ```
-mini-deck/
-├── README.md
-├── arduino/mini_deck/mini_deck.ino   código del Arduino
-├── dashboard/index.html              dashboard web
-├── docs/
-│   ├── laminas/                      lámina e informe de producto (PDF)
-│   └── esquemas/shield_mapa.png      esquema de conexiones
-└── fotos/                            proceso de fabricación
+mini-deck-casero/
+├── README.md                  este documento
+├── index.html                 página del proyecto (GitHub Pages)
+├── dashboard/index.html       dashboard web (Web Serial + Web Audio)
+├── mini_deck.ino              código del Arduino
+├── shield_mapa.png            esquema de conexiones del shield
+├── Mini_Deck_Lamina.pdf/.jpg  lámina de producto
+├── Mini_Deck_Informe.pdf      informe de producto
+└── 01…06_*.jpg                fotos del proceso
 ```
+
+Página del proyecto: https://pclarow.github.io/mini-deck-casero/
