@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini Deck</title>
+<style>
+  :root{
+    --bg:#0c0d10; --panel:#1b1c20; --panel2:#232429; --line:#2f3138; --txt:#e9eaee; --dim:#8b8f99;
+    --blue:#2f55d4; --blue-glow:#5b7fff; --white:#ededed; --orange:#e07a1f; --green:#2ad17e; --red:#ff4d4d;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 32px}
+  header{width:100%;max-width:920px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand h1{margin:0;font-size:26px;letter-spacing:.18em;font-weight:800}
+  .brand span{color:var(--orange);font-size:12px;letter-spacing:.2em;font-weight:700}
+  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  button.connect{background:var(--orange);color:#111;border:0;border-radius:8px;padding:10px 16px;font-weight:800;letter-spacing:.06em;cursor:pointer;font-size:13px}
+  button.connect:hover{filter:brightness(1.1)}
+  button.ghost{background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:12px;cursor:pointer}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);letter-spacing:.05em}
+  .dot{width:9px;height:9px;border-radius:50%;background:#555}
+  .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
+
+  .wrap{width:100%;max-width:920px;display:grid;grid-template-columns:1fr 260px;gap:18px}
+  @media (max-width:820px){.wrap{grid-template-columns:1fr}}
+
+  /* ---- device ---- */
+  .device{position:relative;background:linear-gradient(180deg,#26272c,#1a1b1f);border:1px solid #34363d;border-radius:22px;
+    aspect-ratio:200/180;box-shadow:0 30px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06)}
+  .screw{position:absolute;width:3.2%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 35%,#777,#2a2a2a);box-shadow:inset 0 0 0 1px #111}
+  .screw::after{content:"";position:absolute;inset:45% 18%;background:#111;border-radius:2px}
+  .el{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center}
+  .label{margin-top:6%;font-size:clamp(10px,1.6vw,15px);font-weight:800;letter-spacing:.18em;color:#f2f2f2}
+  .sub{font-size:clamp(8px,1.1vw,11px);color:var(--dim);letter-spacing:.12em;margin-top:2px}
+
+  .arcade{width:clamp(62px,12.5vw,112px);aspect-ratio:1;border-radius:50%;position:relative;transition:transform .05s}
+  .arcade .ring{position:absolute;inset:-9%;border-radius:50%;background:#111;box-shadow:inset 0 0 0 2px #333}
+  .arcade .cap{position:absolute;inset:0;border-radius:50%}
+  .arcade.cue .cap{background:radial-gradient(circle at 40% 35%,#5b7fff,#2343b8 70%);box-shadow:inset 0 -6px 12px rgba(0,0,0,.35)}
+  .arcade.play .cap{background:radial-gradient(circle at 40% 35%,#ffffff,#cfcfcf 70%);box-shadow:inset 0 -6px 12px rgba(0,0,0,.25)}
+  .arcade.pressed{transform:scale(.94)}
+  .arcade.cue.pressed .cap{box-shadow:0 0 30px 6px rgba(91,127,255,.75), inset 0 4px 10px rgba(0,0,0,.35)}
+  .arcade.play.pressed .cap{box-shadow:0 0 30px 6px rgba(255,255,255,.6), inset 0 4px 10px rgba(0,0,0,.25)}
+  .arcade .icon{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(18px,3.4vw,30px);font-weight:900;color:rgba(0,0,0,.55)}
+  .arcade.cue .icon{color:rgba(255,255,255,.85)}
+  .led{width:9px;height:9px;border-radius:50%;background:#3a2a1a;margin-top:6px}
+  .led.on{background:var(--orange);box-shadow:0 0 10px var(--orange)}
+  .led.blink{animation:blink 1s steps(2,start) infinite}
+  @keyframes blink{to{visibility:hidden}}
+
+  .fx{width:clamp(30px,5.6vw,46px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 35%,#444,#111);box-shadow:0 0 0 3px #0e0e0e, 0 0 0 4px #333;transition:transform .05s}
+  .fx.pressed{transform:scale(.9);background:radial-gradient(circle at 40% 35%,#ffb067,#e07a1f);box-shadow:0 0 22px 4px rgba(224,122,31,.7),0 0 0 3px #0e0e0e}
+
+  .knobwrap{position:relative;width:clamp(64px,12vw,104px);aspect-ratio:1}
+  .knobwrap svg.scale{position:absolute;inset:-22%;width:144%;height:144%}
+  .knob{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#cfd2d8,#8e939c,#d7dade,#8e939c,#cfd2d8);
+    box-shadow:0 6px 14px rgba(0,0,0,.6), inset 0 0 0 3px rgba(0,0,0,.25);cursor:grab}
+  .knob::before{content:"";position:absolute;inset:16%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#e6e8ec,#a4a8b0)}
+  .knob::after{content:"";position:absolute;left:50%;top:7%;width:7%;height:30%;background:#111;border-radius:3px;transform:translateX(-50%)}
+
+  .logo{border:1px solid rgba(224,122,31,.45);border-radius:10px;padding:2.2% 4%;text-align:center}
+  .logo b{display:block;font-size:clamp(13px,2.4vw,22px);letter-spacing:.25em;color:var(--orange)}
+  .logo small{font-size:clamp(8px,1vw,10px);letter-spacing:.2em;color:var(--dim)}
+
+  .fader{width:46%;align-items:stretch}
+  .fader .label{align-self:center}
+  .track{position:relative;height:clamp(10px,1.4vw,14px);background:#0b0b0d;border-radius:8px;box-shadow:inset 0 1px 3px #000;cursor:pointer}
+  .ticks{display:flex;justify-content:space-between;margin:0 2% 6px}
+  .ticks i{width:2px;height:6px;background:#9a9a9a}
+  .ticks i:nth-child(5n+1){height:10px;background:#ddd}
+  .cap{}
+  .fcap{position:absolute;top:50%;width:clamp(26px,4.4vw,40px);height:clamp(40px,6.8vw,62px);transform:translate(-50%,-50%);
+    background:linear-gradient(180deg,#3a3b40,#16171a);border-radius:5px;box-shadow:0 6px 12px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.12);cursor:grab}
+  .fcap::after{content:"";position:absolute;left:12%;right:12%;top:50%;height:3px;background:#fff;transform:translateY(-50%);border-radius:2px}
+  .ab{position:absolute;top:50%;transform:translateY(-50%);font-weight:900;font-size:clamp(14px,2.4vw,22px)}
+
+  /* ---- side panel ---- */
+  .side{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .card h3{margin:0 0 10px;font-size:11px;letter-spacing:.2em;color:var(--dim);font-weight:700}
+  canvas#viz{width:100%;height:90px;display:block;border-radius:8px;background:#0b0c0e}
+  .steps{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;margin-top:10px}
+  .steps i{height:8px;border-radius:2px;background:#2a2c31}
+  .steps i.beat{background:#3b3e45}
+  .steps i.now{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+  .meters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .meter{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--dim);letter-spacing:.15em}
+  .meter .m{width:100%;height:10px;background:#0b0c0e;border-radius:6px;overflow:hidden}
+  .meter .m b{display:block;height:100%;width:50%;background:linear-gradient(90deg,var(--green),#e9d22a,var(--red))}
+  table{width:100%;border-collapse:collapse;font-family:Consolas,Menlo,monospace;font-size:12px}
+  td{padding:4px 2px;border-bottom:1px solid #26282e}
+  td:last-child{text-align:right;color:#fff}
+  .raw{font-family:Consolas,Menlo,monospace;font-size:11px;color:var(--dim);margin-top:8px;word-break:break-all}
+  .info{font-size:12px;color:var(--dim);line-height:1.5}
+  .kbd{display:inline-block;border:1px solid #444;border-bottom-width:2px;border-radius:4px;padding:0 5px;font-family:Consolas,monospace;color:#ddd}
+  .warn{color:#ffb067}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><h1>MINI DECK</h1><span>DASHBOARD</span></div>
+  <div class="bar">
+    <div class="status"><span class="dot" id="dot"></span><span id="statusTxt">Sin conectar</span></div>
+    <button class="ghost" id="audioBtn">🔊 Activar audio</button>
+    <button class="connect" id="connectBtn">CONECTAR ARDUINO</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="device" id="device">
+    <div class="screw" style="left:2%;top:2.6%"></div><div class="screw" style="right:2%;top:2.6%"></div>
+    <div class="screw" style="left:2%;bottom:2.6%"></div><div class="screw" style="right:2%;bottom:2.6%"></div>
+
+    <!-- FILTER (45,148) -> left 22.5%, top 100-148/180 = 17.8% -->
+    <div class="el" style="left:22.5%;top:17%">
+      <div class="knobwrap">
+        <svg class="scale" viewBox="-72 -72 144 144" id="scaleSvg"></svg>
+        <div class="knob" id="knob"></div>
+      </div>
+      <div class="label" style="margin-top:14%">FILTER</div>
+      <div class="sub" id="filterTxt">OFF</div>
+    </div>
+
+    <div class="el" style="left:50%;top:15%"><div class="logo"><b>MINI DECK</b><small>ENTREGA 1 · UAI</small></div></div>
+
+    <!-- FX (155,148) -->
+    <div class="el" style="left:77.5%;top:15.5%">
+      <div class="fx" id="fx"></div>
+      <div class="label">FX</div>
+      <div class="sub" id="fxTxt">ECHO</div>
+    </div>
+
+    <!-- CUE (45,95) -> top 47.2% -->
+    <div class="el" style="left:22.5%;top:50%">
+      <div class="arcade cue" id="cue"><div class="ring"></div><div class="cap"></div><div class="icon">⏮</div></div>
+      <div class="label" style="margin-top:12%">CUE</div>
+      <div class="led" id="cueLed"></div>
+    </div>
+
+    <!-- PLAY (155,95) -->
+    <div class="el" style="left:77.5%;top:50%">
+      <div class="arcade play" id="play"><div class="ring"></div><div class="cap"></div><div class="icon">▶❚❚</div></div>
+      <div class="label" style="margin-top:12%">PLAY</div>
+      <div class="led" id="playLed"></div>
+    </div>
+
+    <!-- FADER (100,40) -> top 77.8% -->
+    <div class="el fader" style="left:50%;top:77.8%">
+      <div class="ticks" id="ticks"></div>
+      <div class="track" id="track">
+        <span class="ab" style="left:-11%">A</span><span class="ab" style="right:-11%">B</span>
+        <div class="fcap" id="fcap" style="left:50%"></div>
+      </div>
+      <div class="label" style="margin-top:9%">CROSSFADER</div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="card">
+      <h3>SALIDA</h3>
+      <canvas id="viz" width="460" height="160"></canvas>
+      <div class="steps" id="steps"></div>
+    </div>
+    <div class="card">
+      <h3>MEZCLA</h3>
+      <div class="meters">
+        <div class="meter">DECK A · BEAT<div class="m"><b id="mA"></b></div></div>
+        <div class="meter">DECK B · BASS<div class="m"><b id="mB"></b></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>DATOS EN VIVO</h3>
+      <table>
+        <tr><td>CUE · D2</td><td id="vCue">0</td></tr>
+        <tr><td>PLAY · D3</td><td id="vPlay">0</td></tr>
+        <tr><td>FX · D4</td><td id="vFx">0</td></tr>
+        <tr><td>FILTER · A0</td><td id="vFilter">512</td></tr>
+        <tr><td>FADER · A1</td><td id="vFader">512</td></tr>
+      </table>
+      <div class="raw" id="raw">—</div>
+    </div>
+    <div class="card info" id="help">
+      Sin Arduino también puedes probar: <span class="kbd">Q</span> CUE · <span class="kbd">W</span> PLAY · <span class="kbd">E</span> FX, y arrastra la perilla y el fader con el mouse.
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   ESTADO DE LOS CONTROLES
+   ========================================================= */
+const state = { cue:0, play:0, fx:0, filter:512, fader:512 };
+const $ = id => document.getElementById(id);
+
+/* ---------- escala de la perilla y del fader ---------- */
+(function buildScale(){
+  const svg = $('scaleSvg'); let s = '';
+  for (let i=0;i<=10;i++){
+    const a = (-135 + i*27) * Math.PI/180;
+    const r1 = 58, r2 = (i%5===0)?68:64;
+    const x1 = Math.sin(a)*r1, y1 = -Math.cos(a)*r1, x2 = Math.sin(a)*r2, y2 = -Math.cos(a)*r2;
+    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${i%5===0?'#ddd':'#888'}" stroke-width="${i%5===0?3:2}" stroke-linecap="round"/>`;
+  }
+  svg.innerHTML = s;
+  const t = $('ticks'); for (let i=0;i<11;i++) t.appendChild(document.createElement('i'));
+  const st = $('steps'); for (let i=0;i<16;i++){ const e=document.createElement('i'); if(i%4===0) e.className='beat'; st.appendChild(e); }
+})();
+
+/* =========================================================
+   AUDIO (Web Audio): Deck A = beat, Deck B = bajo
+   ========================================================= */
+let ctx = null, master, gainA, gainB, lp, hp, fxSend, delay, fb, analyser, anA, anB;
+const BPM = 124, STEP = 60 / BPM / 4;   // semicorcheas
+let playing = false, cueHeld = false, step = 0, nextTime = 0, timer = null;
+
+function initAudio(){
+  if (ctx) { ctx.resume(); return; }
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  master = ctx.createGain(); master.gain.value = 0.85;
+  lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; lp.Q.value = 6;
+  hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 10; hp.Q.value = 6;
+  gainA = ctx.createGain(); gainB = ctx.createGain();
+  anA = ctx.createAnalyser(); anB = ctx.createAnalyser(); anA.fftSize = anB.fftSize = 256;
+  const mix = ctx.createGain();
+  gainA.connect(anA); gainB.connect(anB);
+  gainA.connect(mix); gainB.connect(mix);
+  mix.connect(lp); lp.connect(hp); hp.connect(master);
+  // echo
+  fxSend = ctx.createGain(); fxSend.gain.value = 0;
+  delay = ctx.createDelay(2); delay.delayTime.value = STEP * 3;
+  fb = ctx.createGain(); fb.gain.value = 0.5;
+  hp.connect(fxSend); fxSend.connect(delay); delay.connect(fb); fb.connect(delay); delay.connect(master);
+  analyser = ctx.createAnalyser(); analyser.fftSize = 1024;
+  master.connect(analyser); analyser.connect(ctx.destination);
+  noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+  const d = noiseBuf.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  applyMix(); applyFilter();
+  $('audioBtn').textContent = '🔊 Audio activo';
+}
+let noiseBuf;
+
+function kick(t, out){
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t+0.12);
+  g.gain.setValueAtTime(1, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.35);
+  o.connect(g); g.connect(out); o.start(t); o.stop(t+0.36);
+}
+function noise(t, out, type, f, dur, vol){
+  const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+  const fl = ctx.createBiquadFilter(); fl.type = type; fl.frequency.value = f;
+  const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+  s.connect(fl); fl.connect(g); g.connect(out); s.start(t); s.stop(t+dur+0.01);
+}
+const bassLine = [45,0,45,57, 0,45,0,48, 43,0,43,55, 0,43,0,47]; // notas MIDI (0 = silencio)
+function bass(t, out, n){
+  if (!n) return;
+  const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  o.type = 'sawtooth'; o.frequency.value = 440 * Math.pow(2, (n-69)/12);
+  f.type = 'lowpass'; f.Q.value = 8; f.frequency.setValueAtTime(1800, t); f.frequency.exponentialRampToValueAtTime(220, t+0.18);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t+0.01); g.gain.exponentialRampToValueAtTime(0.001, t+0.22);
+  o.connect(f); f.connect(g); g.connect(out); o.start(t); o.stop(t+0.24);
+}
+function scheduleStep(s, t){
+  const i = s % 16;
+  if (i % 4 === 0) kick(t, gainA);
+  if (i % 4 === 2) noise(t, gainA, 'highpass', 7000, 0.06, 0.35);
+  if (i === 4 || i === 12) noise(t, gainA, 'bandpass', 1500, 0.18, 0.7);
+  if (i % 2 === 1) noise(t, gainA, 'highpass', 9000, 0.03, 0.12);
+  bass(t, gainB, bassLine[i]);
+  // animación sincronizada
+  const delayMs = Math.max(0, (t - ctx.currentTime) * 1000);
+  setTimeout(() => showStep(i), delayMs);
+}
+function scheduler(){
+  while (nextTime < ctx.currentTime + 0.12){
+    scheduleStep(step, nextTime);
+    nextTime += STEP; step++;
+  }
+}
+function startTransport(fromZero){
+  initAudio();
+  if (fromZero) step = 0;
+  nextTime = ctx.currentTime + 0.05;
+  clearInterval(timer); timer = setInterval(scheduler, 25);
+}
+function stopTransport(){ clearInterval(timer); timer = null; showStep(-1); }
+function showStep(i){
+  const els = $('steps').children;
+  for (let k=0;k<16;k++) els[k].classList.toggle('now', k===i);
+}
+
+/* ---------- mezcla y filtro ---------- */
+function applyMix(){
+  const x = state.fader / 1023;
+  const a = Math.cos(x * Math.PI/2), b = Math.sin(x * Math.PI/2);  // equal-power
+  if (ctx){ gainA.gain.setTargetAtTime(a, ctx.currentTime, 0.02); gainB.gain.setTargetAtTime(b, ctx.currentTime, 0.02); }
+}
+function applyFilter(){
+  // centro = sin filtro · izquierda = low-pass · derecha = high-pass (filtro DJ clásico)
+  const v = (state.filter - 512) / 511;   // -1 a 1
+  let txt = 'OFF';
+  let lpF = 20000, hpF = 10;
+  if (v < -0.06){ const k = (-v - 0.06)/0.94; lpF = 20000 * Math.pow(150/20000, k); txt = 'LOW ' + Math.round(lpF) + ' Hz'; }
+  else if (v > 0.06){ const k = (v - 0.06)/0.94; hpF = 10 * Math.pow(4000/10, k); txt = 'HIGH ' + Math.round(hpF) + ' Hz'; }
+  $('filterTxt').textContent = txt;
+  if (ctx){ lp.frequency.setTargetAtTime(lpF, ctx.currentTime, 0.03); hp.frequency.setTargetAtTime(hpF, ctx.currentTime, 0.03); }
+}
+
+/* =========================================================
+   LÓGICA DE CONTROLES (flancos de botones)
+   ========================================================= */
+function onCue(down){
+  // estilo CDJ: en pausa, mantener CUE reproduce desde el inicio; al soltar vuelve al punto cue
+  if (down){
+    if (playing){ playing = false; stopTransport(); step = 0; }
+    else { cueHeld = true; startTransport(true); }
+  } else if (cueHeld){ cueHeld = false; stopTransport(); step = 0; }
+}
+function onPlay(down){
+  if (!down) return;
+  if (cueHeld){ cueHeld = false; playing = true; return; }  // CUE + PLAY = sigue sonando
+  playing = !playing;
+  if (playing) startTransport(false); else stopTransport();
+}
+function onFx(down){
+  if (ctx) fxSend.gain.setTargetAtTime(down ? 0.8 : 0, ctx.currentTime, 0.02);
+}
+
+function setControls(next){
+  if (next.cue !== state.cue){ state.cue = next.cue; onCue(!!next.cue); }
+  if (next.play !== state.play){ state.play = next.play; onPlay(!!next.play); }
+  if (next.fx !== state.fx){ state.fx = next.fx; onFx(!!next.fx); }
+  if (next.filter !== state.filter){ state.filter = next.filter; applyFilter(); }
+  if (next.fader !== state.fader){ state.fader = next.fader; applyMix(); }
+  render();
+}
+
+function render(){
+  $('cue').classList.toggle('pressed', !!state.cue);
+  $('play').classList.toggle('pressed', !!state.play);
+  $('fx').classList.toggle('pressed', !!state.fx);
+  $('knob').style.transform = `rotate(${-135 + state.filter/1023*270}deg)`;
+  $('fcap').style.left = (state.fader/1023*100) + '%';
+  $('vCue').textContent = state.cue; $('vPlay').textContent = state.play; $('vFx').textContent = state.fx;
+  $('vFilter').textContent = state.filter; $('vFader').textContent = state.fader;
+  $('playLed').className = 'led' + (playing ? ' on' : ' blink');
+  $('cueLed').className = 'led' + ((cueHeld || state.cue) ? ' on' : '');
+}
+
+/* =========================================================
+   CONEXIÓN SERIAL (Web Serial API, Chrome / Edge)
+   ========================================================= */
+let port = null;
+$('connectBtn').onclick = async () => {
+  if (!('serial' in navigator)){
+    $('statusTxt').innerHTML = '<span class="warn">Usa Google Chrome o Edge</span>'; return;
+  }
+  try{
+    initAudio();
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    $('dot').classList.add('on'); $('statusTxt').textContent = 'Conectado'; $('connectBtn').textContent = 'CONECTADO';
+    readLoop();
+  }catch(e){
+    $('statusTxt').innerHTML = '<span class="warn">' + (e.message.includes('open') ? 'Cierra el Monitor Serie del Arduino IDE' : 'No se conectó') + '</span>';
+  }
+};
+async function readLoop(){
+  const decoder = new TextDecoderStream();
+  port.readable.pipeTo(decoder.writable).catch(()=>{});
+  const reader = decoder.readable.getReader();
+  let buf = '';
+  try{
+    while (true){
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += value;
+      let nl;
+      while ((nl = buf.indexOf('\n')) >= 0){
+        const line = buf.slice(0, nl).trim(); buf = buf.slice(nl+1);
+        parseLine(line);
+      }
+    }
+  }catch(e){}
+  $('dot').classList.remove('on'); $('statusTxt').textContent = 'Desconectado'; $('connectBtn').textContent = 'CONECTAR ARDUINO';
+}
+function parseLine(line){
+  const p = line.split(',').map(Number);
+  if (p.length !== 5 || p.some(isNaN)) return;
+  $('raw').textContent = 'serial › ' + line;
+  setControls({ cue:p[0], play:p[1], fx:p[2], filter:p[3], fader:p[4] });
+}
+
+/* =========================================================
+   MODO DEMO: teclado y mouse
+   ========================================================= */
+$('audioBtn').onclick = initAudio;
+const keyMap = { q:'cue', w:'play', e:'fx' };
+addEventListener('keydown', e => { const k = keyMap[e.key.toLowerCase()]; if (k && !e.repeat){ initAudio(); setControls({...state, [k]:1}); } });
+addEventListener('keyup',   e => { const k = keyMap[e.key.toLowerCase()]; if (k) setControls({...state, [k]:0}); });
+for (const [id, key] of [['cue','cue'],['play','play'],['fx','fx']]){
+  const el = $(id);
+  el.addEventListener('pointerdown', () => { initAudio(); setControls({...state, [key]:1}); });
+  const up = () => { if (state[key]) setControls({...state, [key]:0}); };
+  el.addEventListener('pointerup', up); el.addEventListener('pointerleave', up);
+}
+(function dragKnob(){
+  const k = $('knob'); let y0, v0;
+  k.addEventListener('pointerdown', e => { y0 = e.clientY; v0 = state.filter; k.setPointerCapture(e.pointerId); });
+  k.addEventListener('pointermove', e => { if (y0 === undefined) return;
+    setControls({...state, filter: Math.max(0, Math.min(1023, Math.round(v0 + (y0 - e.clientY) * 5)))}); });
+  k.addEventListener('pointerup', () => y0 = undefined);
+  k.addEventListener('dblclick', () => setControls({...state, filter:512}));
+})();
+(function dragFader(){
+  const t = $('track'); let on = false;
+  const set = e => { const r = t.getBoundingClientRect();
+    setControls({...state, fader: Math.max(0, Math.min(1023, Math.round((e.clientX - r.left) / r.width * 1023)))}); };
+  t.addEventListener('pointerdown', e => { on = true; t.setPointerCapture(e.pointerId); set(e); });
+  t.addEventListener('pointermove', e => on && set(e));
+  t.addEventListener('pointerup', () => on = false);
+})();
+
+/* =========================================================
+   VISUALIZACIÓN
+   ========================================================= */
+const cv = $('viz'), g2 = cv.getContext('2d');
+const data = new Uint8Array(512), lev = new Uint8Array(128);
+function level(an){ if (!an) return 0; an.getByteTimeDomainData(lev); let m = 0; for (const v of lev) m = Math.max(m, Math.abs(v-128)); return m/128; }
+function draw(){
+  g2.fillStyle = '#0b0c0e'; g2.fillRect(0,0,cv.width,cv.height);
+  g2.strokeStyle = '#2a2c31'; g2.beginPath(); g2.moveTo(0,cv.height/2); g2.lineTo(cv.width,cv.height/2); g2.stroke();
+  if (analyser){
+    analyser.getByteTimeDomainData(data);
+    g2.lineWidth = 2.5; g2.strokeStyle = state.fx ? '#e07a1f' : '#5b7fff'; g2.beginPath();
+    for (let i=0;i<data.length;i++){ const x = i/(data.length-1)*cv.width, y = data[i]/255*cv.height; i ? g2.lineTo(x,y) : g2.moveTo(x,y); }
+    g2.stroke();
+  }
+  $('mA').style.width = Math.min(100, level(anA)*140) + '%';
+  $('mB').style.width = Math.min(100, level(anB)*140) + '%';
+  requestAnimationFrame(draw);
+}
+render(); applyFilter(); draw();
+</script>
+</body>
+</html>
