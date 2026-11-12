@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Deck — Pedro Claro</title>
+<meta name="description" content="Mini Deck: controlador DJ físico de un canal hecho con Arduino, impresión 3D y una interfaz web con Web Serial y Web Audio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0b0c; --panel:#141416; --line:#2b2b2f; --accent:#e8832a;
+    --text:#f2f0eb; --dim:#a3a39e;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif}
+  body{background-image:radial-gradient(circle at 85% 0%, rgba(232,131,42,.08), transparent 40%)}
+  a{color:inherit}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;letter-spacing:-.01em}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+  nav{display:flex;justify-content:space-between;align-items:center;padding:22px 0;gap:16px;flex-wrap:wrap}
+  nav a{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--dim);text-decoration:none}
+  nav a:hover{color:var(--text)}
+
+  .hero{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;padding:40px 0 80px}
+  @media (max-width:860px){.hero{grid-template-columns:1fr;gap:32px;padding-top:16px}}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);margin:0 0 16px}
+  .hero h1{font-size:clamp(48px,8vw,88px);line-height:.95;margin-bottom:22px}
+  .lede{color:var(--dim);font-size:17px;line-height:1.65;margin:0 0 30px;max-width:46ch}
+  .btns{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;padding:13px 20px;border-radius:9px;text-decoration:none;transition:transform .15s ease,filter .15s ease,border-color .15s ease}
+  .btn.primary{background:var(--accent);color:#111}
+  .btn.ghost{border:1px solid var(--line);color:var(--text)}
+  .btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+  .btn.ghost:hover{border-color:rgba(255,255,255,.3)}
+  .hero-img{border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(0,0,0,.9)}
+  .hero-img img{display:block;width:100%;height:auto}
+
+  .facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  @media (max-width:720px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .fact{padding:22px 18px 22px 0}
+  .fact b{display:block;font-family:'Space Grotesk',sans-serif;font-size:26px;margin-bottom:4px}
+  .fact span{color:var(--dim);font-size:13.5px}
+
+  section{padding:88px 0 0}
+  .sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:32px;flex-wrap:wrap}
+  .sec-head h2{font-size:clamp(28px,4vw,38px)}
+  .sec-head p{color:var(--dim);max-width:52ch;margin:0;line-height:1.6;font-size:15px}
+  .num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);display:block;margin-bottom:10px}
+
+  .video{display:grid;grid-template-columns:320px 1fr;gap:40px;align-items:center}
+  @media (max-width:760px){.video{grid-template-columns:1fr}}
+  .video iframe{width:100%;aspect-ratio:9/16;border:0;border-radius:16px;background:#000;display:block}
+  .video ul{margin:0;padding:0;list-style:none;display:grid;gap:14px}
+  .video li{padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--dim);font-size:15px;line-height:1.55}
+  .video li b{color:var(--text);font-family:'Space Grotesk',sans-serif}
+
+  .controls{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+  @media (max-width:900px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 18px}
+  .ctrl i{display:block;width:30px;height:30px;border-radius:50%;margin-bottom:16px}
+  .ctrl h3{font-size:17px;margin-bottom:4px}
+  .ctrl .pin{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent)}
+  .ctrl p{color:var(--dim);font-size:14px;line-height:1.55;margin:10px 0 0}
+
+  .flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:s}
+  @media (max-width:860px){.flow{grid-template-columns:1fr 1fr}}
+  .step{border-top:2px solid var(--accent);padding-top:16px}
+  .step h3{font-size:17px;margin-bottom:8px}
+  .step p{color:var(--dim);font-size:14.5px;line-height:1.6;margin:0}
+  pre{margin:28px 0 0;background:#111113;border:1px solid var(--line);border-radius:12px;padding:18px 20px;font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#d9d7d2;overflow-x:auto}
+  pre em{color:var(--accent);font-style:normal}
+
+  .gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  @media (max-width:760px){.gallery{grid-template-columns:1fr 1fr}}
+  figure{margin:0}
+  figure img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block;border:1px solid var(--line)}
+  figcaption{color:var(--dim);font-size:13.5px;margin-top:10px;line-height:1.5}
+  figcaption b{color:var(--text);font-weight:600}
+
+  .docs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  @media (max-width:860px){.docs{grid-template-columns:1fr 1fr}}
+  .doc{display:flex;flex-direction:column;gap:8px;padding:20px;border:1px solid var(--line);border-radius:14px;text-decoration:none;background:var(--panel);transition:border-color .15s ease,transform .15s ease}
+  .doc:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .doc span{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent)}
+  .doc b{font-family:'Space Grotesk',sans-serif;font-size:17px}
+  .doc small{color:var(--dim);font-size:13.5px;line-height:1.5}
+
+  footer{margin-top:96px;padding:28px 0 48px;border-top:1px solid var(--line);color:var(--dim);font-size:13.5px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <a href="https://pclarow.github.io/Portafolio-Pedro-Claro/">← Portafolio de Pedro Claro</a>
+    <a href="https://github.com/Pclarow/mini-deck-casero">Código en GitHub ↗</a>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <p class="eyebrow">// proyecto 05 · interfaces físicas</p>
+      <h1>Mini Deck</h1>
+      <p class="lede">Un controlador DJ físico de un canal. Dos botones arcade, un efecto, un filtro y un crossfader que mezclan música en vivo en el navegador.</p>
+      <div class="btns">
+        <a class="btn primary" href="dashboard/">Probar el dashboard</a>
+        <a class="btn ghost" href="#video">Ver video</a>
+        <a class="btn ghost" href="docs/laminas/Mini_Deck_Lamina.pdf">Lámina PDF</a>
+      </div>
+    </div>
+    <div class="hero-img"><img src="fotos/01_producto_final.jpg" alt="Mini Deck terminado: caja blanca impresa en 3D con perilla FILTER, botón FX, arcades CUE azul y PLAY blanco, y crossfader"></div>
+  </header>
+
+  <div class="facts">
+    <div class="fact"><b>5</b><span>controles físicos</span></div>
+    <div class="fact"><b>3 + 2</b><span>datos discretos y continuos</span></div>
+    <div class="fact"><b>200 × 180</b><span>mm, impreso en 3D</span></div>
+    <div class="fact"><b>0</b><span>protoboards: todo soldado</span></div>
+  </div>
+
+  <section id="video">
+    <div class="sec-head">
+      <div><span class="num">01</span><h2>En acción</h2></div>
+      <p>Cada gesto en el controlador se refleja al instante en la interfaz web, que genera la música.</p>
+    </div>
+    <div class="video">
+      <iframe src="https://www.youtube.com/embed/lWUqFrEio6M" title="Video de demostración del Mini Deck" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      <ul>
+        <li><b>Transporte.</b> CUE y PLAY son los botones grandes del centro, como en un reproductor de DJ.</li>
+        <li><b>Ajuste.</b> La perilla FILTER corta graves o agudos; el botón FX agrega eco mientras se mantiene.</li>
+        <li><b>Mezcla.</b> El crossfader pasa del deck A (beat) al deck B (bajo).</li>
+        <li><b>Robusto.</b> Se puede dar vuelta y sacudir: los controles van fijados a la tapa y la electrónica está soldada.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div><span class="num">02</span><h2>Controles</h2></div>
+      <p>Layout inspirado en mezcladores profesionales: transporte al centro, ajuste arriba y mezcla abajo, cerca de la mano.</p>
+    </div>
+    <div class="controls">
+      <div class="ctrl"><i style="background:#3557e0"></i><h3>CUE</h3><span class="pin">D2 · arcade azul</span><p>Pre-escucha; si suena, vuelve al inicio.</p></div>
+      <div class="ctrl"><i style="background:#ededed"></i><h3>PLAY</h3><span class="pin">D3 · arcade blanco</span><p>Reproduce o pausa la mezcla.</p></div>
+      <div class="ctrl"><i style="background:#e8832a"></i><h3>FX</h3><span class="pin">D4 · pulsador</span><p>Eco mientras se mantiene presionado.</p></div>
+      <div class="ctrl"><i style="background:#b9bdc5"></i><h3>FILTER</h3><span class="pin">A0 · perilla B10K</span><p>Izquierda graves, derecha agudos.</p></div>
+      <div class="ctrl"><i style="background:linear-gradient(90deg,#3a3c44 40%,#b9bdc5 40% 60%,#3a3c44 60%)"></i><h3>CROSSFADER</h3><span class="pin">A1 · fader 10 kΩ</span><p>Mezcla entre deck A y deck B.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div><span class="num">03</span><h2>Cómo funciona</h2></div>
+      <p>Del gesto físico al sonido en cuatro pasos, sin servidor: el navegador habla directo con el Arduino por USB.</p>
+    </div>
+    <div class="flow">
+      <div class="step"><h3>Controles</h3><p>Tres botones con INPUT_PULLUP y dos potenciómetros lineales.</p></div>
+      <div class="step"><h3>Shield soldado</h3><p>Placa perforada con rieles de 5V y GND y siete conexiones desmontables.</p></div>
+      <div class="step"><h3>Arduino Uno</h3><p>Lee, suaviza las lecturas analógicas y envía solo cuando algo cambia.</p></div>
+      <div class="step"><h3>Web Serial + Web Audio</h3><p>Chrome recibe los datos y genera beat, bajo, filtro y eco en tiempo real.</p></div>
+    </div>
+<pre>// trama serial a 115200 baud
+CUE,PLAY,FX,FILTER,FADER
+<em>0,1,0,512,880</em>      ← botones 0/1 · perillas 0–1023</pre>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div><span class="num">04</span><h2>Proceso</h2></div>
+      <p>Probar cada control antes de soldar, y soldar un control a la vez.</p>
+    </div>
+    <div class="gallery">
+      <figure><img src="fotos/02_componentes.jpg" alt="Componentes sobre la mesa" loading="lazy"><figcaption><b>Componentes.</b> Arcade, pulsador, potenciómetro, fader y Arduino Uno.</figcaption></figure>
+      <figure><img src="fotos/04_prueba_monitor_serie.jpg" alt="Lecturas en el Monitor Serie" loading="lazy"><figcaption><b>Prueba.</b> Cada control verificado en el Monitor Serie.</figcaption></figure>
+      <figure><img src="fotos/03_modelo_3d_rhino.jpg" alt="Modelo 3D en Rhino" loading="lazy"><figcaption><b>Modelado.</b> Tapa y caja en Rhino 8 para impresión 3D.</figcaption></figure>
+      <figure><img src="fotos/05_soldadura_shield.jpg" alt="Shield en placa perforada" loading="lazy"><figcaption><b>Shield.</b> Siete cables etiquetados hacia el Arduino.</figcaption></figure>
+      <figure><img src="fotos/06_cableado_perilla.jpg" alt="Perilla con cables soldados" loading="lazy"><figcaption><b>Cableado.</b> Cables soldados y codificados por color.</figcaption></figure>
+      <figure><img src="fotos/01_producto_final.jpg" alt="Mini Deck terminado" loading="lazy"><figcaption><b>Resultado.</b> Caja cerrada con cuatro tornillos rebajados.</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div><span class="num">05</span><h2>Documentación</h2></div>
+      <p>Todo lo necesario para entender, revisar o replicar el proyecto.</p>
+    </div>
+    <div class="docs">
+      <a class="doc" href="docs/laminas/Mini_Deck_Lamina.pdf"><span>PDF</span><b>Lámina de producto</b><small>Resumen visual en A3.</small></a>
+      <a class="doc" href="docs/laminas/Mini_Deck_Informe.pdf"><span>PDF</span><b>Informe</b><small>Diseño, electrónica, software y proceso.</small></a>
+      <a class="doc" href="docs/esquemas/shield_mapa.png"><span>PNG</span><b>Esquema del shield</b><small>Mapa de conexiones de la placa.</small></a>
+      <a class="doc" href="https://github.com/Pclarow/mini-deck-casero/blob/main/arduino/mini_deck/mini_deck.ino"><span>INO</span><b>Código Arduino</b><small>Lectura, suavizado y envío serial.</small></a>
+    </div>
+  </section>
+
+  <footer>
+    <span>Mini Deck · Pedro Claro · Taller de Interfaces, Universidad Adolfo Ibáñez, 2026</span>
+    <a href="https://pclarow.github.io/Portafolio-Pedro-Claro/">Ver más proyectos →</a>
+  </footer>
+
+</div>
+</body>
+</html>
